@@ -10,11 +10,12 @@ import (
 )
 
 type DBConfig struct {
-	DBUsername string
-	DBPassword string
-	DBName     string
-	DBHost     string
-	DBPort     int
+	DBUsername *string
+	DBPassword *string
+	DBName     *string
+	DBHost     *string
+	DBPort     *int
+	DBRestart  *bool
 }
 
 var Config DBConfig
@@ -22,26 +23,25 @@ var Config DBConfig
 var DB *sql.DB
 
 func init() {
-	parsingDBConfig()
-	flag.Parse()
-	initDB()
+	ParsingDBConfig()
 }
 
-func parsingDBConfig() {
+func ParsingDBConfig() {
 	Config = DBConfig{
-		DBUsername: *flag.String("dbusername", "postgres", "database username of our website"),
-		DBPassword: *flag.String("dbpassword", "200103287sdu", "database password of our website"),
-		DBName:     *flag.String("dbname", "online_shop", "database name of our website"),
-		DBHost:     *flag.String("dbhost", "127.0.0.1", "database host of our website"),
-		DBPort:     *flag.Int("dbport", 5432, "database port of our website"),
+		DBUsername: flag.String("dbusername", "postgres", "database username of our website"),
+		DBPassword: flag.String("dbpassword", "200103287sdu", "database password of our website"),
+		DBName:     flag.String("dbname", "online_shop", "database name of our website"),
+		DBHost:     flag.String("dbhost", "127.0.0.1", "database host of our website"),
+		DBPort:     flag.Int("dbport", 5432, "database port of our website"),
+		DBRestart:  flag.Bool("dbrestart", false, "needs to restart to database"),
 	}
 }
 
-func initDB() {
+func InitDB() {
 	psqlInfo := fmt.Sprintf(
 		"host=%s port=%d user=%s "+
 			"password=%s dbname=%s sslmode=disable",
-		Config.DBHost, Config.DBPort, Config.DBUsername, Config.DBPassword, Config.DBName,
+		*Config.DBHost, *Config.DBPort, *Config.DBUsername, *Config.DBPassword, *Config.DBName,
 	)
 	var err error
 	DB, err = sql.Open("postgres", psqlInfo)
@@ -49,7 +49,10 @@ func initDB() {
 		fmt.Println("We have problems with connection database", err)
 		os.Exit(1)
 	}
-	//configDB()
+	if *Config.DBRestart {
+		configDB()
+		fmt.Println("Database restarted")
+	}
 }
 
 func configDB() {
