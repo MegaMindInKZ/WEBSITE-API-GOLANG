@@ -24,6 +24,8 @@ var DB *sql.DB
 
 func init() {
 	ParsingDBConfig()
+	flag.Parse()
+	InitDB()
 }
 
 func ParsingDBConfig() {
